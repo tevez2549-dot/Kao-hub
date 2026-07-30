@@ -1,0 +1,253 @@
+-- เรียกใช้ Rayfield UI Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- สร้างหน้าต่าง UI
+local Window = Rayfield:CreateWindow({
+   Name = "Kao Hub",
+   LoadingTitle = "กำลังโหลด Kao Hub...",
+   LoadingSubtitle = "by Your Name",
+   ConfigurationSaving = {
+      Enabled = false,
+   },
+   Discord = {
+      Enabled = false,
+   },
+   KeySystem = false,
+})
+
+-- สร้างแท็บเมนู
+local Tab = Window:CreateTab("Main", 4483362458) 
+
+-- ตัวแปรสำหรับควบคุมการเปิด/ปิด
+getgenv().autoPencil = false
+getgenv().autoChair = false
+getgenv().autoSellMuscle = false
+getgenv().autoClick = false
+getgenv().highJump = false
+getgenv().jumpPower = 100 
+getgenv().walkSpeed = false
+getgenv().speedValue = 16
+
+-- ==========================================
+-- ปุ่ม Toggle สำหรับ Pencil
+-- ==========================================
+Tab:CreateToggle({
+   Name = "เปิดใช้งาน Pencil (Auto)",
+   CurrentValue = false,
+   Flag = "PencilToggle", 
+   Callback = function(Value)
+        getgenv().autoPencil = Value
+        
+        if Value then
+            task.spawn(function()
+                while getgenv().autoPencil do
+                    task.wait(0.1) 
+                    
+                    pcall(function()
+                        local player = game:GetService("Players").LocalPlayer
+                        local character = player.Character
+                        
+                        if character and character:FindFirstChild("Pencil") then
+                            local pencil = character:FindFirstChild("Pencil")
+                            if pencil:FindFirstChild("Script") and pencil.Script:FindFirstChild("RemoteEvent") then
+                                local args = { 6 }
+                                pencil.Script.RemoteEvent:FireServer(unpack(args))
+                            end
+                        end
+                    end)
+                end
+            end)
+        end
+   end,
+})
+
+-- ==========================================
+-- ปุ่ม Toggle สำหรับ Chair
+-- ==========================================
+Tab:CreateToggle({
+   Name = "เปิดใช้งาน Chair (Auto)",
+   CurrentValue = false,
+   Flag = "ChairToggle", 
+   Callback = function(Value)
+        getgenv().autoChair = Value
+        
+        if Value then
+            task.spawn(function()
+                while getgenv().autoChair do
+                    task.wait(0.1) 
+                    
+                    pcall(function()
+                        local player = game:GetService("Players").LocalPlayer
+                        local character = player.Character
+                        
+                        if character and character:FindFirstChild("Chair") then
+                            local chair = character:FindFirstChild("Chair")
+                            if chair:FindFirstChild("Script") and chair.Script:FindFirstChild("RemoteEvent") then
+                                local args = { 348 }
+                                chair.Script.RemoteEvent:FireServer(unpack(args))
+                            end
+                        end
+                    end)
+                end
+            end)
+        end
+   end,
+})
+
+-- ==========================================
+-- ปุ่ม Toggle สำหรับ SellMuscle (Auto)
+-- ==========================================
+Tab:CreateToggle({
+   Name = "เปิดใช้งาน SellMuscle (Auto)",
+   CurrentValue = false,
+   Flag = "SellMuscleToggle", 
+   Callback = function(Value)
+        getgenv().autoSellMuscle = Value
+        
+        if Value then
+            task.spawn(function()
+                while getgenv().autoSellMuscle do
+                    task.wait(0.1) 
+                    
+                    pcall(function()
+                        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("RemoteEvent")
+                        if remote then
+                            local args = { "SellMuscle" }
+                            remote:FireServer(unpack(args))
+                        end
+                    end)
+                end
+            end)
+        end
+   end,
+})
+
+-- ==========================================
+-- ปุ่ม Toggle สำหรับ Auto Click (แก้ไขบัคเดินไม่ได้แล้ว)
+-- ==========================================
+Tab:CreateToggle({
+   Name = "Auto Click (คลิกเมาส์รัวๆ)",
+   CurrentValue = false,
+   Flag = "AutoClickToggle", 
+   Callback = function(Value)
+        getgenv().autoClick = Value
+        local vim = game:GetService("VirtualInputManager")
+        
+        if Value then
+            task.spawn(function()
+                while getgenv().autoClick do
+                    task.wait(0.05) 
+                    pcall(function()
+                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)  
+                        task.wait(0.01)
+                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0) 
+                    end)
+                end
+            end)
+        else
+            -- บังคับปล่อยคลิกทันทีเมื่อปิด เพื่อแก้ปัญหาเดินไม่ได้
+            pcall(function()
+                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            end)
+        end
+   end,
+})
+
+-- ==========================================
+-- ส่วนควบคุม: วิ่งไว (WalkSpeed)
+-- ==========================================
+Tab:CreateToggle({
+   Name = "เปิดใช้งาน วิ่งไว",
+   CurrentValue = false,
+   Flag = "WalkSpeedToggle", 
+   Callback = function(Value)
+        getgenv().walkSpeed = Value
+        
+        task.spawn(function()
+            while getgenv().walkSpeed do
+                task.wait(0.1)
+                pcall(function()
+                    local player = game:GetService("Players").LocalPlayer
+                    if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                        humanoid.WalkSpeed = getgenv().speedValue
+                    end
+                end)
+            end
+            
+            -- รีเซ็ตค่าความเร็วกลับเป็นปกติเมื่อปิดใช้งาน
+            pcall(function()
+                local player = game:GetService("Players").LocalPlayer
+                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    humanoid.WalkSpeed = 16 -- ค่ามาตรฐาน Roblox
+                end
+            end)
+        end)
+   end,
+})
+
+Tab:CreateSlider({
+   Name = "ปรับความเร็วในการวิ่ง",
+   Range = {16, 300},
+   Increment = 5,
+   Suffix = " Speed",
+   CurrentValue = 16,
+   Flag = "SpeedSlider",
+   Callback = function(Value)
+      getgenv().speedValue = Value
+   end,
+})
+
+-- ==========================================
+-- ส่วนควบคุม: กระโดดสูง (High Jump)
+-- ==========================================
+Tab:CreateToggle({
+   Name = "เปิดใช้งาน กระโดดสูง",
+   CurrentValue = false,
+   Flag = "HighJumpToggle", 
+   Callback = function(Value)
+        getgenv().highJump = Value
+        
+        task.spawn(function()
+            while getgenv().highJump do
+                task.wait(0.1)
+                pcall(function()
+                    local player = game:GetService("Players").LocalPlayer
+                    if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                        humanoid.UseJumpPower = true
+                        humanoid.JumpPower = getgenv().jumpPower
+                    end
+                end)
+            end
+            
+            pcall(function()
+                local player = game:GetService("Players").LocalPlayer
+                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    humanoid.JumpPower = 50 
+                end
+            end)
+        end)
+   end,
+})
+
+Tab:CreateSlider({
+   Name = "ปรับระดับความสูงของการกระโดด",
+   Range = {50, 500},
+   Increment = 10,
+   Suffix = " Power",
+   CurrentValue = 100,
+   Flag = "JumpSlider",
+   Callback = function(Value)
+      getgenv().jumpPower = Value
+   end,
+})
+
+Rayfield:Notify({
+   Title = "Kao Hub",
+   Content = "แก้บัคเดินไม่ได้ + เพิ่มวิ่งไวสำเร็จ!",
+   Duration = 3,
+   Image = 4483362458,
+})
