@@ -1,0 +1,198 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local isSpinning = false
+local spinSpeed = 80 -- ความเร็วการหมุน
+
+-- สร้าง GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SpinGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- สร้างเฟรมหลัก (ลดขนาดให้กะทัดรัดขึ้น)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 130, 0, 65) 
+mainFrame.Position = UDim2.new(0, 15, 0, 15)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20) -- สีดำเข้ม
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Corner สำหรับ mainFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = mainFrame
+
+-- Stroke สำหรับ mainFrame
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(220, 20, 60) -- สีแดง
+stroke.Thickness = 1.5
+stroke.Parent = mainFrame
+
+-- ชื่อ UI: Kao hub (ปรับขนาดให้เล็กลง)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 90, 0, 20)
+titleLabel.Position = UDim2.new(0, 8, 0, 4)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 12
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Text = "Kao hub"
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = mainFrame
+
+-- ปุ่มปิด (ปรับให้เล็กลง)
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(0, 102, 0, 4)
+closeButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextSize = 12
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Text = "×"
+closeButton.BorderSizePixel = 0
+closeButton.Parent = mainFrame
+
+-- Corner สำหรับปุ่มปิด
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 5)
+closeCorner.Parent = closeButton
+
+-- ปุ่ม Spin (ปรับลดขนาดลงให้สมดุลกับกรอบที่เล็กลง)
+local button = Instance.new("TextButton")
+button.Name = "SpinButton"
+button.Size = UDim2.new(0, 118, 0, 32)
+button.Position = UDim2.new(0, 6, 0, 27)
+button.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+button.TextColor3 = Color3.fromRGB(200, 200, 220)
+button.TextSize = 12
+button.Font = Enum.Font.GothamBold
+button.Text = "🔄 OFF"
+button.BorderSizePixel = 0
+button.Parent = mainFrame
+
+-- Corner สำหรับปุ่ม Spin
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 6)
+buttonCorner.Parent = button
+
+-- Stroke สำหรับปุ่ม Spin
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(220, 20, 60)
+buttonStroke.Thickness = 1.2
+buttonStroke.Parent = button
+
+-- ==========================================
+-- ระบบทำให้ UI สามารถเลื่อนขยับได้ (Draggable)
+-- ==========================================
+local dragging, dragInput, dragStart, startPos
+
+mainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if dragging and dragInput then
+		local delta = dragInput.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale, 
+			startPos.X.Offset + delta.X, 
+			startPos.Y.Scale, 
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+-- ==========================================
+
+-- ฟังก์ชันสำหรับสปิน
+local function spinCharacter()
+	local character = player.Character
+	if not character then return end
+	
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then return end
+	
+	while isSpinning and humanoidRootPart and character.Parent do
+		humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+		RunService.RenderStepped:Wait()
+	end
+end
+
+-- Hover effect ปุ่ม Spin
+button.MouseEnter:Connect(function()
+	if isSpinning then
+		button.BackgroundColor3 = Color3.fromRGB(50, 100, 50)
+	else
+		button.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	end
+end)
+
+button.MouseLeave:Connect(function()
+	if isSpinning then
+		button.BackgroundColor3 = Color3.fromRGB(30, 80, 30)
+	else
+		button.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+	end
+end)
+
+-- Hover effect ปุ่มปิด
+closeButton.MouseEnter:Connect(function()
+	closeButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+end)
+
+closeButton.MouseLeave:Connect(function()
+	closeButton.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+end)
+
+-- ปุ่มกด Spin
+button.MouseButton1Click:Connect(function()
+	isSpinning = not isSpinning
+	
+	if isSpinning then
+		button.BackgroundColor3 = Color3.fromRGB(30, 80, 30) -- เขียว ON
+		button.TextColor3 = Color3.fromRGB(100, 255, 100)
+		button.Text = "✓ ON"
+		task.spawn(spinCharacter)
+	else
+		button.BackgroundColor3 = Color3.fromRGB(25, 25, 35) -- ดำ OFF
+		button.TextColor3 = Color3.fromRGB(220, 220, 220)
+		button.Text = "🔄 OFF"
+	end
+end)
+
+-- ปุ่มปิด GUI
+closeButton.MouseButton1Click:Connect(function()
+	isSpinning = false
+	screenGui:Destroy()
+end)
+
+-- Reset เมื่อ Respawn
+player.CharacterAdded:Connect(function()
+	isSpinning = false
+	button.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+	button.TextColor3 = Color3.fromRGB(220, 220, 220)
+	button.Text = "🔄 OFF"
+end)
